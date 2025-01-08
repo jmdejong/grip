@@ -1,0 +1,14 @@
+[gd_scene load_steps=4 format=3 uid="uid://dpdqr75yvrw7"]
+
+[ext_resource type="Script" path="res://code/planet.gd" id="1_ap1x6"]
+[ext_resource type="ArrayMesh" uid="uid://cxur7kdo4i170" path="res://models/icosahedron2.obj" id="1_kry4u"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gyk0w"]
+albedo_color = Color(0, 1, 1, 1)
+
+[node name="PlanetMesh" type="MeshInstance3D"]
+transform = Transform3D(1000, 0, 0, 0, 1000, 0, 0, 0, 1000, 0, 0, 0)
+material_override = SubResource("StandardMaterial3D_gyk0w")
+visibility_range_begin = 2000.0
+mesh = ExtResource("1_kry4u")
+script = ExtResource("1_ap1x6")
