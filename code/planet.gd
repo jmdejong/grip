@@ -3,7 +3,7 @@ extends MeshInstance3D
 var subfaces = null
 var center: Vector3
 var radius: float = 1
-const Face = preload("res://scenes/face.tscn")
+const FaceScene = preload("res://scenes/face.tscn")
 @export var gradient: Gradient
 
 func _enter_tree() -> void:
@@ -30,70 +30,32 @@ func remove_subfaces() -> void:
 		face.queue_free()
 	subfaces = null
 	
-func center_between(p0: Vector3, n0: Vector3, p1: Vector3, n1: Vector3) -> Vector3:
-	var k := p0.distance_to(p1)*0.360
-	var c0 := p0 + n0.cross(p1 - p0).cross(n0).normalized() * k
-	var c1 := p1 + n1.cross(p0 - p1).cross(n1).normalized() * k
-	var t := 0.5
-	var r = p0.bezier_interpolate(c0, c1, p1, t)
-	#print(r.length())
-	return r
 
-#func subdivide_face(v0: Vector3, n0: Vector3, v1: Vector3, n1: Vector3, v2: Vector3, n2: Vector3) -> Mesh:
-	#var surface := []
-	#surface.resize(Mesh.ARRAY_MAX)
-	#surface[Mesh.ARRAY_VERTEX] = PackedVector3Array([
-		#v0,
-		#v1,
-		#v2,
-		#center_between(v0, n0, v1, n1),
-		#center_between(v0, n0, v2, n2),
-		#center_between(v2, n2, v1, n1),
-	#])
-	#surface[Mesh.ARRAY_NORMAL] = PackedVector3Array([
-		#n0,
-		#n1,
-		#n2,
-		#(n0 + n1) / 2,
-		#(n0 + n2) / 2,
-		#(n2 + n1) / 2
-	#])
-	#surface[Mesh.ARRAY_INDEX] = PackedInt32Array([
-		#0, 3, 4,
-		#3, 1, 5,
-		#4, 5, 2,
-		#4, 3, 5
-	#])
-	#var mesh := ArrayMesh.new()
-	#mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, surface)
-	#return mesh
 
-func add_subfaces() -> Array[Node3D]:
-	var faces: Array[Node3D] = []
+func add_subfaces() -> Array[Face]:
+	var faces: Array[Face] = []
+	var shape: Face.Shape = Face.Shape.new()
+	shape.gradient = gradient
 	for si in mesh.get_surface_count():
 		var surface_array = mesh.surface_get_arrays(si)
 		var indices: PackedInt32Array = surface_array[Mesh.ARRAY_INDEX]
 		var verts: PackedVector3Array = surface_array[Mesh.ARRAY_VERTEX]
 		var heights: PackedFloat32Array = PackedFloat32Array()
+		var points: Array[Face.Point] = []
 		for vi in len(verts):
+			points.append(Face.Point.new(
+				shape,
+				verts[vi],
+				randf()*2-1,
+				randi(),
+				1
+			))
 			heights.append(randf()*2-1)
-		#var normals: PackedVector3Array = surface_array[Mesh.ARRAY_NORMAL]
 		for fi in range(0, len(indices), 3):
 			var i0 := indices[fi]
 			var i1 := indices[fi+1]
 			var i2 := indices[fi+2]
-			var face = Face.instantiate()
-			face.radius = radius
-			face.verts = PackedVector3Array([verts[i0], verts[i1], verts[i2]])# as Array[Vector3]
-			face.heights = PackedFloat32Array([heights[i0], heights[i1], heights[i2]])
-			face.gradient = gradient
-			#print("f {1} {0} {2}".format([i0+1, i1+1, i2+1]))
-			#var face := MeshInstance3D.new()
-			#face.mesh = subdivide_face(verts[i0], normals[i0], verts[i1], normals[i1], verts[i2], normals[i2])
-			#face.set_script(load("res://code/planet.gd"))
-			#face.visibility_range_begin = (global_transform * verts[i0]).distance_to(global_transform *verts[i1]) * 2
-			#face.center = global_transform * ((verts[i0] + verts[i1] + verts[i2])/3)
-			faces.append(face)
+			faces.append(Face.from_points(points[i0], points[i1], points[i2]))
 	return faces
 
 

@@ -1,28 +1,31 @@
+class_name Face
 extends Node3D
 
-
-@export var verts: PackedVector3Array
-@export var heights: PackedFloat32Array
-@export var gradient: Gradient
-var radius: float
+var points: Array[Point]
 
 var center: Vector3
 var near: float
 var far: float
-const segments := 4
+var shape: Shape
+const segments := 5
 var subfaces = null
-const Face = preload("res://scenes/face.tscn")
+const FaceScene = preload("res://scenes/face.tscn")
+
+static func from_points(a: Point, b: Point, c: Point) -> Face:
+	var face: Face = FaceScene.instantiate()
+	face.points = [a, b, c]
+	return face
+	
+
+func hash(v: Vector3) -> float:
+	return 0
 
 func _enter_tree() -> void:
-	#print(verts, " ", len(verts))
-	assert(len(verts) == 3)
-	#print(verts)
-	#print(verts[0].length_squared(), " ", radius*radius)
-	#print(heights[0])
-	assert(is_equal_approx(verts[0].length_squared(), radius*radius))
-	center = global_transform * ((verts[0] + verts[1] + verts[2])/3.0)
-	near = (global_transform * verts[0]).distance_to(center) * 4.0
+	assert(len(points) == 3)
+	center = global_transform * ((points[0].pos + points[1].pos + points[2].pos)/3.0)
+	near = (global_transform * points[0].pos).distance_to(center) * 4.0
 	far = near * 2
+	shape = points[0].shape
 	if $Mesh.mesh == null:
 		$Mesh.mesh = build_mesh()
 
@@ -34,64 +37,36 @@ func build_mesh():
 	surface[Mesh.ARRAY_COLOR] = PackedColorArray()
 	surface[Mesh.ARRAY_INDEX] = PackedInt32Array()
 	var i: int = 0
-	var prev: Array[int]
 	for iv: int in range(segments+1):
-		var line: Array[int] = []
 		var v: float = float(iv) / segments
-		for iu: int in range(segments - iv+1):
+		for iu: int in range(segments - iv + 1):
 			var u: float = float(iu) / segments
-			line.append(i)
 			var w: float = 1.0 - u - v
-			var pos: Vector3 = (verts[0] * u + verts[1] * v + verts[2] * w).normalized() * radius
-			surface[Mesh.ARRAY_VERTEX].append(pos)
-			surface[Mesh.ARRAY_NORMAL].append(pos.normalized())
-			var height = u * heights[0] + v * heights[1] + w * heights[2]
-			#print(gradient.sample(height))
-			surface[Mesh.ARRAY_COLOR].append(gradient.sample(height))
-			#surface[Mesh.ARRAY_COLOR].append(Color.AQUA)
+			var point := Point.interpolate(points[0], points[1], points[2], Vector3(u, v, w))
+			var pos: Vector3 = point.pos
+			surface[Mesh.ARRAY_VERTEX].append(point.position())
+			surface[Mesh.ARRAY_NORMAL].append(point.normal())
+			surface[Mesh.ARRAY_COLOR].append(point.color())
 			if iv > 0:
-				surface[Mesh.ARRAY_INDEX].append_array(PackedInt32Array([prev[iu], prev[iu+1], i]))
+				var p: int = i + iv - segments - 2
+				surface[Mesh.ARRAY_INDEX].append_array(PackedInt32Array([p, p+1, i]))
 				if iu > 0:
-					surface[Mesh.ARRAY_INDEX].append_array([prev[iu], i, i-1])
+					surface[Mesh.ARRAY_INDEX].append_array([p, i, i-1])
 			i += 1
-		prev = line
 	var mesh := ArrayMesh.new()
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, surface)
 	return mesh
 
-func make_subface(points: PackedVector3Array) -> Node3D:
-	var face := Face.instantiate()
-	for uvw in points:
-		assert(is_equal_approx(uvw.x + uvw.y + uvw.z, 1))
-		face.verts.append((verts[0] * uvw.x + verts[1] * uvw.y + verts[2] * uvw.z).normalized() * radius)
-		face.heights.append(heights[0] * uvw.x + heights[1] * uvw.y + heights[2] * uvw.z)
-	face.radius = radius
-	face.gradient = gradient
-	return face
-
-
-func make_subfaces() -> Array[Node3D]:
-	var faces: Array[Node3D] = []
-	#var c01: Vector3 = (verts[0] + verts[1]).normalized() * radius
-	#var c02: Vector3 = (verts[0] + verts[2]).normalized() * radius
-	#var c12: Vector3 = (verts[1] + verts[2]).normalized() * radius
-	for sub in [
-		PackedVector3Array([Vector3(1, 0, 0), Vector3(.5, .5, 0), Vector3(.5, 0, .5)]),
-		PackedVector3Array([Vector3(.5, .5, 0), Vector3(0, 1, 0), Vector3(0, .5, .5)]),
-		PackedVector3Array([Vector3(0, 0, 1), Vector3(.5, 0, .5), Vector3(0, .5, .5)]),
-		PackedVector3Array([Vector3(.5, .5, 0), Vector3(0, .5, .5), Vector3(.5, 0, .5)]),
-		#[verts[0], verts[0] + verts[1], verts[0] + verts[2]],
-		#[verts[0] + verts[1], verts[1], verts[1] + verts[2]],
-		#[verts[2], verts[0] + verts[2], verts[1] + verts[2]],
-		#[verts[0] + verts[1], verts[1] + verts[2], verts[0] + verts[2]],
-	]:
-		#var face := Face.instantiate()
-		#face.verts = PackedVector3Array(sub.map(func(p): return p.normalized() * radius))
-		#face.radius = radius
-		#face.gradient = gradient
-		faces.append(make_subface(sub))
-	
-	return faces
+func make_subfaces() -> Array[Face]:
+	var m01: Point = points[0].mid(points[1])
+	var m02: Point = points[0].mid(points[2])
+	var m12: Point = points[1].mid(points[2])
+	return [
+		Face.from_points(points[0], m01, m02),
+		Face.from_points(m01, points[1], m12),
+		Face.from_points(m02, m12, points[2]),
+		Face.from_points(m01, m12, m02)
+	]
 
 func remove_subfaces() -> void:
 	for face in subfaces:
@@ -113,7 +88,57 @@ func _process(_delta: float) -> void:
 		remove_subfaces()
 
 
-#class Point:
-	#func _init(pos: Vector3, normal: Vector3) -> void:
-		#self.pos = pos
-		#self.normal = normal
+class Shape:
+	var core: Vector3 = Vector3(0, 0, 0)
+	var radius: float = 1
+	var gradient: Gradient
+	func surface_point(p: Vector3) -> Vector3:
+		return (p - core).normalized() * radius + core
+
+class Point:
+	var shape: Shape
+	var pos: Vector3
+	var height: float
+	var seed: int
+	var depth: int
+	var actual: bool = true
+	func _init(shape: Shape, pos: Vector3, height: float, seed: int, depth: int) -> void:
+		self.shape = shape
+		self.pos = pos
+		assert(is_equal_approx((pos - shape.core).length_squared(), shape.radius * shape.radius))
+		self.height = height
+		self.seed = seed
+		self.depth = depth
+	
+	func position() -> Vector3:
+		return pos
+	
+	func normal() -> Vector3:
+		return shape.core.direction_to(pos)
+	
+	func color() -> Color:
+		return shape.gradient.sample(height)
+	
+	func mid(other: Point) -> Point:
+		assert(self.shape == other.shape)
+		assert(self.pos != other.pos)
+		return Point.new(
+			self.shape,
+			self.shape.surface_point((self.pos + other.pos) / 2),
+			(self.height + other.height) / 2,
+			rand_from_seed(self.seed + other.seed)[0],
+			max(depth, other.depth) + 1
+		)
+	
+	static func interpolate(a: Point, b: Point, c: Point, uvw: Vector3) -> Point:
+		assert(is_equal_approx(uvw.x + uvw.y + uvw.z, 1))
+		var p := Point.new(
+			a.shape,
+			(a.pos * uvw.x + b.pos * uvw.y + c.pos * uvw.z).normalized() * a.shape.radius,
+			a.height * uvw.x + b.height * uvw.y + c.height * uvw.z,
+			0,
+			-1
+		)
+		p.actual = false
+		return p
+	
