@@ -40,17 +40,15 @@ func add_subfaces() -> Array[Face]:
 		var surface_array = mesh.surface_get_arrays(si)
 		var indices: PackedInt32Array = surface_array[Mesh.ARRAY_INDEX]
 		var verts: PackedVector3Array = surface_array[Mesh.ARRAY_VERTEX]
-		var heights: PackedFloat32Array = PackedFloat32Array()
 		var points: Array[Face.Point] = []
 		for vi in len(verts):
 			points.append(Face.Point.new(
 				shape,
 				verts[vi],
-				randf()*2-1,
+				(randf()*2-1) * shape.height_base,
 				randi(),
 				1
 			))
-			heights.append(randf()*2-1)
 		for fi in range(0, len(indices), 3):
 			var i0 := indices[fi]
 			var i1 := indices[fi+1]

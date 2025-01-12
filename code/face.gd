@@ -7,7 +7,6 @@ var center: Vector3
 var near: float
 var far: float
 var shape: Shape
-const segments := 5
 var subfaces = null
 const FaceScene = preload("res://scenes/face.tscn")
 
@@ -15,19 +14,36 @@ static func from_points(a: Point, b: Point, c: Point) -> Face:
 	var face: Face = FaceScene.instantiate()
 	face.points = [a, b, c]
 	return face
-	
-
-func hash(v: Vector3) -> float:
-	return 0
 
 func _enter_tree() -> void:
 	assert(len(points) == 3)
 	center = global_transform * ((points[0].pos + points[1].pos + points[2].pos)/3.0)
-	near = (global_transform * points[0].pos).distance_to(center) * 4.0
+	near = (global_transform * points[0].pos).distance_to(center) * 2.0
 	far = near * 2
 	shape = points[0].shape
 	if $Mesh.mesh == null:
 		$Mesh.mesh = build_mesh()
+
+func sub_points(levels: int) -> Dictionary:
+	var segments: int = 2**levels
+	var subpoints: Dictionary = {}
+	#subpoints.resize((segments * (segments + 1))/2)
+	subpoints[Vector3i(segments, 0, 0)] = points[0]
+	subpoints[Vector3i(0, segments, 0)] = points[1]
+	subpoints[Vector3i(0, 0, segments)] = points[2]
+	for level in levels:
+		var step: int = 2**(levels-level)
+		for iv: int in range(0, segments, step):
+			for iu: int in range(0, segments - iv, step):
+				var iw: int = segments - iv - iu
+				var a: Point = subpoints[Vector3i(iu, iv, iw)]
+				var b: Point = subpoints[Vector3i(iu + step, iv, iw - step)]
+				var c: Point = subpoints[Vector3i(iu, iv  + step, iw - step)]
+				subpoints[Vector3i(iu + step / 2, iv, iw - step / 2)] = Point.mid(a, b)
+				subpoints[Vector3i(iu, iv + step / 2, iw - step / 2)] = Point.mid(a, c)
+				subpoints[Vector3i(iu + step / 2, iv + step / 2, iw - step)] = Point.mid(b, c)
+	return subpoints
+	
 
 func build_mesh():
 	var surface := []
@@ -36,13 +52,14 @@ func build_mesh():
 	surface[Mesh.ARRAY_NORMAL] = PackedVector3Array()
 	surface[Mesh.ARRAY_COLOR] = PackedColorArray()
 	surface[Mesh.ARRAY_INDEX] = PackedInt32Array()
+	var levels: int = 5
+	var subpoints := sub_points(levels)
 	var i: int = 0
+	var segments: int = 2**levels
 	for iv: int in range(segments+1):
-		var v: float = float(iv) / segments
 		for iu: int in range(segments - iv + 1):
-			var u: float = float(iu) / segments
-			var w: float = 1.0 - u - v
-			var point := Point.interpolate(points[0], points[1], points[2], Vector3(u, v, w))
+			var iw: int = segments-iu-iv
+			var point: Point = subpoints[Vector3i(iu, iv, iw)]
 			var pos: Vector3 = point.pos
 			surface[Mesh.ARRAY_VERTEX].append(point.position())
 			surface[Mesh.ARRAY_NORMAL].append(point.normal())
@@ -58,9 +75,9 @@ func build_mesh():
 	return mesh
 
 func make_subfaces() -> Array[Face]:
-	var m01: Point = points[0].mid(points[1])
-	var m02: Point = points[0].mid(points[2])
-	var m12: Point = points[1].mid(points[2])
+	var m01 := Point.mid(points[0], points[1])
+	var m02 := Point.mid(points[0], points[2])
+	var m12 := Point.mid(points[1], points[2])
 	return [
 		Face.from_points(points[0], m01, m02),
 		Face.from_points(m01, points[1], m12),
@@ -88,12 +105,22 @@ func _process(_delta: float) -> void:
 		remove_subfaces()
 
 
+static func randomizef(seed: int) -> float:
+	var rng := RandomNumberGenerator.new()
+	rng.set_seed(seed)
+	return rng.randf()
+
 class Shape:
 	var core: Vector3 = Vector3(0, 0, 0)
 	var radius: float = 1
 	var gradient: Gradient
+	var gradient_scale = 0.1
+	var height_base: float = 0.1
+	var height_gain: float = 0.4
 	func surface_point(p: Vector3) -> Vector3:
 		return (p - core).normalized() * radius + core
+	func color(height: float) -> Color:
+		return gradient.sample(height / gradient_scale)
 
 class Point:
 	var shape: Shape
@@ -111,34 +138,36 @@ class Point:
 		self.depth = depth
 	
 	func position() -> Vector3:
-		return pos
+		return (pos - shape.core).normalized() * (shape.radius + max(height, -0.000001)) + shape.core
 	
 	func normal() -> Vector3:
 		return shape.core.direction_to(pos)
 	
 	func color() -> Color:
-		return shape.gradient.sample(height)
+		return shape.color(height)
 	
-	func mid(other: Point) -> Point:
-		assert(self.shape == other.shape)
-		assert(self.pos != other.pos)
+	static func mid(a: Point, b: Point) -> Point:
+		assert(a.shape == b.shape)
+		assert(a.pos != b.pos)
+		assert(a.depth >= 0 && b.depth >= 0)
+		var seed: int = rand_from_seed(a.seed + b.seed)[0]
+		var depth: int = max(a.depth, b.depth) + 1
 		return Point.new(
-			self.shape,
-			self.shape.surface_point((self.pos + other.pos) / 2),
-			(self.height + other.height) / 2,
-			rand_from_seed(self.seed + other.seed)[0],
-			max(depth, other.depth) + 1
+			a.shape,
+			a.shape.surface_point(a.pos*.5 + b.pos*.5),
+			(a.height + b.height) / 2 + 2*(Face.randomizef(seed) - .5) / 2**depth * a.shape.height_gain,
+			seed,
+			depth
 		)
 	
 	static func interpolate(a: Point, b: Point, c: Point, uvw: Vector3) -> Point:
 		assert(is_equal_approx(uvw.x + uvw.y + uvw.z, 1))
 		var p := Point.new(
 			a.shape,
-			(a.pos * uvw.x + b.pos * uvw.y + c.pos * uvw.z).normalized() * a.shape.radius,
+			a.shape.surface_point(a.pos * uvw.x + b.pos * uvw.y + c.pos * uvw.z),
 			a.height * uvw.x + b.height * uvw.y + c.height * uvw.z,
 			0,
 			-1
 		)
 		p.actual = false
 		return p
-	
