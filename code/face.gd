@@ -123,7 +123,7 @@ class Shape:
 	var gradient: Gradient
 	var gradient_scale = 0.1
 	var height_base: float = 0.1
-	var height_gain: float = 0.4
+	var height_gain: float = 0.5
 	var max_depth: int = 6
 	func surface_point(p: Vector3, height: float = 0) -> Vector3:
 		return (p - core).normalized() * (radius + height) + core

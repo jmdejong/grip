@@ -65,9 +65,6 @@ shadow_enabled = true
 [node name="Start" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2000, 0)
 
-[node name="Player" parent="Start" instance=ExtResource("1_u61e3")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
-
 [node name="Floor" type="MeshInstance3D" parent="Start"]
 material_override = SubResource("StandardMaterial3D_fpogw")
 mesh = SubResource("BoxMesh_s7i5b")
@@ -98,5 +95,8 @@ skeleton = NodePath("../../../..")
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Start"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -5)
 mesh = ExtResource("3_t4xrs")
+
+[node name="Player" parent="Start" instance=ExtResource("1_u61e3")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.900024, 0)
 
 [node name="Planet" parent="." instance=ExtResource("2_l5nsi")]
