@@ -1,36 +1,41 @@
 class_name Face
 extends Node3D
 
-var points: Array[Point]
+var p0: Point
+var p1: Point
+var p2: Point
 
 var center: Vector3
 var near: float
 var far: float
 var shape: Shape
 var subfaces = null
+var depth: int
 const FaceScene = preload("res://scenes/face.tscn")
 
 static func from_points(a: Point, b: Point, c: Point) -> Face:
 	var face: Face = FaceScene.instantiate()
-	face.points = [a, b, c]
+	face.p0 = a
+	face.p1 = b
+	face.p2 = c
+	
 	return face
 
 func _enter_tree() -> void:
-	assert(len(points) == 3)
-	center = global_transform * ((points[0].pos + points[1].pos + points[2].pos)/3.0)
-	near = (global_transform * points[0].pos).distance_to(center) * 2.0
+	center = global_transform * ((p0.pos + p1.pos + p2.pos)/3.0)
+	near = (global_transform * p0.pos).distance_to(center) * 2.0
 	far = near * 2
-	shape = points[0].shape
+	shape = p0.shape
+	depth = max(p0.depth, p1.depth, p2.depth)
 	if $Mesh.mesh == null:
 		$Mesh.mesh = build_mesh()
 
 func sub_points(levels: int) -> Dictionary:
 	var segments: int = 2**levels
 	var subpoints: Dictionary = {}
-	#subpoints.resize((segments * (segments + 1))/2)
-	subpoints[Vector3i(segments, 0, 0)] = points[0]
-	subpoints[Vector3i(0, segments, 0)] = points[1]
-	subpoints[Vector3i(0, 0, segments)] = points[2]
+	subpoints[Vector3i(segments, 0, 0)] = p0
+	subpoints[Vector3i(0, segments, 0)] = p1
+	subpoints[Vector3i(0, 0, segments)] = p2
 	for level in levels:
 		var step: int = 2**(levels-level)
 		for iv: int in range(0, segments, step):
@@ -75,13 +80,13 @@ func build_mesh():
 	return mesh
 
 func make_subfaces() -> Array[Face]:
-	var m01 := Point.mid(points[0], points[1])
-	var m02 := Point.mid(points[0], points[2])
-	var m12 := Point.mid(points[1], points[2])
+	var m01 := Point.mid(p0, p1)
+	var m02 := Point.mid(p0, p2)
+	var m12 := Point.mid(p1, p2)
 	return [
-		Face.from_points(points[0], m01, m02),
-		Face.from_points(m01, points[1], m12),
-		Face.from_points(m02, m12, points[2]),
+		Face.from_points(p0, m01, m02),
+		Face.from_points(m01, p1, m12),
+		Face.from_points(m02, m12, p2),
 		Face.from_points(m01, m12, m02)
 	]
 
@@ -94,6 +99,8 @@ func remove_subfaces() -> void:
 
 
 func _process(_delta: float) -> void:
+	if depth >= shape.max_depth:
+		return
 	var cd: float = get_viewport().get_camera_3d().global_position.distance_to(center)
 	$Mesh.visible = cd > near
 	$SubFaces.visible = cd <= near
@@ -117,8 +124,9 @@ class Shape:
 	var gradient_scale = 0.1
 	var height_base: float = 0.1
 	var height_gain: float = 0.4
-	func surface_point(p: Vector3) -> Vector3:
-		return (p - core).normalized() * radius + core
+	var max_depth: int = 6
+	func surface_point(p: Vector3, height: float = 0) -> Vector3:
+		return (p - core).normalized() * (radius + height) + core
 	func color(height: float) -> Color:
 		return gradient.sample(height / gradient_scale)
 
@@ -138,7 +146,7 @@ class Point:
 		self.depth = depth
 	
 	func position() -> Vector3:
-		return (pos - shape.core).normalized() * (shape.radius + max(height, -0.000001)) + shape.core
+		return shape.surface_point(pos, max(height, -0.000001))
 	
 	func normal() -> Vector3:
 		return shape.core.direction_to(pos)
