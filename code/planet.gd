@@ -1,28 +1,37 @@
-extends MeshInstance3D
+class_name Planet
+extends Node3D
 
 var subfaces = null
 var center: Vector3
-var radius: float = 1
+@export var radius: float = 1
 const FaceScene = preload("res://scenes/face.tscn")
 @export var gradient: Gradient
+var core: Vector3 = Vector3(0, 0, 0)
+@export var gradient_scale = 500
+@export var height_base: float = 100
+@export var random_weight: float = 1000
+var min_resolution: float = 1.0
 
 func _enter_tree() -> void:
-	center = global_transform * get_aabb().get_center()
+	pass
 
 
 func _ready() -> void:
-	pass
+	generate_icosahedron()
+	$GravityField.scale = Vector3(1, 1, 1) * radius * 4
+	$Mesh.visibility_range_begin = radius * 4
+	center = global_position
 
 func _process(_delta) -> void:
 	var cd: float = get_viewport().get_camera_3d().global_position.distance_to(center)
-	if subfaces == null && cd <= visibility_range_begin - visibility_range_begin_margin:
+	if subfaces == null && cd <= radius * 4:
 		subfaces = add_subfaces()
 		for face in subfaces:
 			face.visibility_parent = get_path()
 			add_child(face)
-			
-	if subfaces != null && cd > visibility_range_begin * 2:
+	if subfaces != null && cd > radius * 8:
 		remove_subfaces()
+
 func remove_subfaces() -> void:
 	for face in subfaces:
 		if face.subfaces != null:
@@ -34,18 +43,16 @@ func remove_subfaces() -> void:
 
 func add_subfaces() -> Array[Face]:
 	var faces: Array[Face] = []
-	var shape: Face.Shape = Face.Shape.new()
-	shape.gradient = gradient
-	for si in mesh.get_surface_count():
-		var surface_array = mesh.surface_get_arrays(si)
+	for si in $Mesh.mesh.get_surface_count():
+		var surface_array = $Mesh.mesh.surface_get_arrays(si)
 		var indices: PackedInt32Array = surface_array[Mesh.ARRAY_INDEX]
 		var verts: PackedVector3Array = surface_array[Mesh.ARRAY_VERTEX]
 		var points: Array[Face.Point] = []
 		for vi in len(verts):
 			points.append(Face.Point.new(
-				shape,
+				self,
 				verts[vi],
-				(randf()*2-1) * shape.height_base,
+				(randf()*2-1) * height_base,
 				randi(),
 				1
 			))
@@ -57,9 +64,13 @@ func add_subfaces() -> Array[Face]:
 	return faces
 
 
-
-
-
+func surface_point(p: Vector3, height: float = 0) -> Vector3:
+	return (p - core).normalized() * (radius + height) + core
+func color(height: float) -> Color:
+	if height < 0:
+		return Color.BLUE
+	else:
+		return gradient.sample(height / gradient_scale)
 
 
 
@@ -79,7 +90,7 @@ func generate_icosahedron():
 		Vector3(-1, PHI, 0),
 		Vector3(1, -PHI, 0),
 		Vector3(-1, -PHI, 0),
-	].map(func(v): return v.normalized())
+	].map(func(v): return v.normalized() * radius)
 	var normals := verts.map(func(v): return v.normalized())
 	var indices: Array[int] = [
 		1, 0, 4,
@@ -110,5 +121,5 @@ func generate_icosahedron():
 	#surface_array[Mesh.ARRAY_TEX_UV] = uvs
 	surface_array[Mesh.ARRAY_NORMAL] = PackedVector3Array(normals)
 	surface_array[Mesh.ARRAY_INDEX] = PackedInt32Array(indices)
-	print(verts[0])
-	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, surface_array)
+	#print(verts[0])
+	$Mesh.mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, surface_array)

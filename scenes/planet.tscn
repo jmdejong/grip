@@ -1,31 +1,31 @@
-[gd_scene load_steps=6 format=3 uid="uid://dpdqr75yvrw7"]
+[gd_scene load_steps=5 format=3 uid="uid://dpdqr75yvrw7"]
 
 [ext_resource type="Script" path="res://code/planet.gd" id="1_ap1x6"]
-[ext_resource type="ArrayMesh" uid="uid://cxur7kdo4i170" path="res://models/icosahedron2.obj" id="1_kry4u"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gyk0w"]
-albedo_color = Color(0, 1, 1, 1)
 
 [sub_resource type="Gradient" id="Gradient_f2i44"]
-offsets = PackedFloat32Array(0, 0.001, 0.108844, 0.282313, 0.428571, 0.598639, 0.846939, 1)
-colors = PackedColorArray(0, 0, 1, 1, 0, 0.533333, 0, 1, 0, 0.822222, 0, 1, 1, 1, 0, 1, 1, 0.533333, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0.533333, 0.533333, 0.533333, 1)
+offsets = PackedFloat32Array(0, 0.108844, 0.282313, 0.428571, 0.598639, 0.846939, 1)
+colors = PackedColorArray(0, 0.533333, 0, 1, 0, 0.822222, 0, 1, 1, 1, 0, 1, 1, 0.533333, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0.533333, 0.533333, 0.533333, 1)
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_lheha"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_8orhw"]
-radius = 4000.0
+radius = 1.0
 
-[node name="PlanetMesh" type="MeshInstance3D"]
-transform = Transform3D(1000, 0, 0, 0, 1000, 0, 0, 0, 1000, 0, 0, 0)
-material_override = SubResource("StandardMaterial3D_gyk0w")
-visibility_range_begin = 4000.0
-mesh = ExtResource("1_kry4u")
+[node name="Planet" type="Node3D"]
+transform = Transform3D(10000, 0, 0, 0, 10000, 0, 0, 0, 10000, 0, 0, 0)
 script = ExtResource("1_ap1x6")
 gradient = SubResource("Gradient_f2i44")
 
-[node name="Area3D" type="Area3D" parent="."]
+[node name="Mesh" type="MeshInstance3D" parent="."]
+mesh = SubResource("ArrayMesh_lheha")
+
+[node name="GravityField" type="Area3D" parent="."]
 gravity_space_override = 3
 gravity_point = true
 gravity_point_center = Vector3(0, 0, 0)
 gravity_direction = Vector3(0, 0, 0)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="GravityField"]
 shape = SubResource("SphereShape3D_8orhw")
+
+[node name="SubFaces" type="Node3D" parent="."]

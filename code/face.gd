@@ -8,9 +8,12 @@ var p2: Point
 var center: Vector3
 var near: float
 var far: float
-var shape: Shape
+var shape: Planet
 var subfaces = null
 var depth: int
+var resolution: float
+var levels: int = 5
+var segments: int = 2**levels
 const FaceScene = preload("res://scenes/face.tscn")
 
 static func from_points(a: Point, b: Point, c: Point) -> Face:
@@ -29,9 +32,9 @@ func _enter_tree() -> void:
 	depth = max(p0.depth, p1.depth, p2.depth)
 	if $Mesh.mesh == null:
 		$Mesh.mesh = build_mesh()
+	resolution = p1.pos.distance_to(p2.pos) / segments
 
-func sub_points(levels: int) -> Dictionary:
-	var segments: int = 2**levels
+func sub_points() -> Dictionary:
 	var subpoints: Dictionary = {}
 	subpoints[Vector3i(segments, 0, 0)] = p0
 	subpoints[Vector3i(0, segments, 0)] = p1
@@ -57,10 +60,8 @@ func build_mesh():
 	surface[Mesh.ARRAY_NORMAL] = PackedVector3Array()
 	surface[Mesh.ARRAY_COLOR] = PackedColorArray()
 	surface[Mesh.ARRAY_INDEX] = PackedInt32Array()
-	var levels: int = 5
-	var subpoints := sub_points(levels)
+	var subpoints := sub_points()
 	var i: int = 0
-	var segments: int = 2**levels
 	for iv: int in range(segments+1):
 		for iu: int in range(segments - iv + 1):
 			var iw: int = segments-iu-iv
@@ -99,7 +100,7 @@ func remove_subfaces() -> void:
 
 
 func _process(_delta: float) -> void:
-	if depth >= shape.max_depth:
+	if resolution < shape.min_resolution:
 		return
 	var cd: float = get_viewport().get_camera_3d().global_position.distance_to(center)
 	$Mesh.visible = cd > near
@@ -117,27 +118,16 @@ static func randomizef(seed: int) -> float:
 	rng.set_seed(seed)
 	return rng.randf()
 
-class Shape:
-	var core: Vector3 = Vector3(0, 0, 0)
-	var radius: float = 1
-	var gradient: Gradient
-	var gradient_scale = 0.1
-	var height_base: float = 0.1
-	var height_gain: float = 0.5
-	var max_depth: int = 6
-	func surface_point(p: Vector3, height: float = 0) -> Vector3:
-		return (p - core).normalized() * (radius + height) + core
-	func color(height: float) -> Color:
-		return gradient.sample(height / gradient_scale)
+
 
 class Point:
-	var shape: Shape
+	var shape: Planet
 	var pos: Vector3
 	var height: float
 	var seed: int
 	var depth: int
 	var actual: bool = true
-	func _init(shape: Shape, pos: Vector3, height: float, seed: int, depth: int) -> void:
+	func _init(shape: Planet, pos: Vector3, height: float, seed: int, depth: int) -> void:
 		self.shape = shape
 		self.pos = pos
 		assert(is_equal_approx((pos - shape.core).length_squared(), shape.radius * shape.radius))
@@ -156,14 +146,15 @@ class Point:
 	
 	static func mid(a: Point, b: Point) -> Point:
 		assert(a.shape == b.shape)
+		var shape: Planet = a.shape
 		assert(a.pos != b.pos)
 		assert(a.depth >= 0 && b.depth >= 0)
 		var seed: int = rand_from_seed(a.seed + b.seed)[0]
 		var depth: int = max(a.depth, b.depth) + 1
 		return Point.new(
-			a.shape,
-			a.shape.surface_point(a.pos*.5 + b.pos*.5),
-			(a.height + b.height) / 2 + 2*(Face.randomizef(seed) - .5) / 2**depth * a.shape.height_gain,
+			shape,
+			shape.surface_point(a.pos*.5 + b.pos*.5),
+			(a.height + b.height) / 2 + (Face.randomizef(seed) * 2 - 1) / 1.7**depth * shape.random_weight,
 			seed,
 			depth
 		)

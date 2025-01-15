@@ -1,10 +1,11 @@
 extends CharacterBody3D
 
 
-const MOUSE_SENSITIVITY = 0.003
-const speed = 10
-const sprint_speed = 300
-const jump_speed = 10
+const MOUSE_SENSITIVITY: float = 0.003
+const speed: float = 5
+const sprint_speed: float = 500
+const ultra_sprint_speed: float = 20000
+const jump_speed: float = 10
 
 var gravity_enabled: bool = false
 
@@ -12,9 +13,13 @@ var gravity_enabled: bool = false
 
 signal viewpoint_changed(pos: Vector3)
 
-func _physics_process(delta):
+func _physics_process(delta: float):
 	var input_movement: Vector2 = Input.get_vector("left", "right", "forwards", "backwards")
-	var s: float = speed if not Input.is_action_pressed("sprint") else sprint_speed
+	var s: float = speed
+	if Input.is_action_pressed("sprint"):
+		s = sprint_speed
+	if Input.is_action_pressed("ultrasprint"):
+		s = ultra_sprint_speed
 	var movement: Vector3 = (Vector3(input_movement.x, 0, input_movement.y) * s)
 	if gravity_enabled:
 		pass
