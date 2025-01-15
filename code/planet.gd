@@ -10,10 +10,12 @@ var core: Vector3 = Vector3(0, 0, 0)
 @export var gradient_scale = 500
 @export var height_base: float = 100
 @export var random_weight: float = 1000
+@export var material: Material
 var min_resolution: float = 1.0
 
 func _enter_tree() -> void:
-	pass
+	material.set_shader_parameter("gradient_scale", gradient_scale)
+	material.set_shader_parameter("radius", radius)
 
 
 func _ready() -> void:
@@ -27,7 +29,6 @@ func _process(_delta) -> void:
 	if subfaces == null && cd <= radius * 4:
 		subfaces = add_subfaces()
 		for face in subfaces:
-			face.visibility_parent = get_path()
 			add_child(face)
 	if subfaces != null && cd > radius * 8:
 		remove_subfaces()

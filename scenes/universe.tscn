@@ -99,12 +99,11 @@ skeleton = NodePath("../../../..")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -5)
 mesh = ExtResource("3_t4xrs")
 
-[node name="Player" parent="Start" instance=ExtResource("1_u61e3")]
-unique_name_in_owner = true
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.900024, 0)
-
 [node name="Planet" parent="." instance=ExtResource("2_l5nsi")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 radius = 50000.0
 
 [node name="Marker" parent="." instance=ExtResource("6_2isk2")]
+
+[node name="Player" parent="." instance=ExtResource("1_u61e3")]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 51000.9, 0)

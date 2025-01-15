@@ -29,7 +29,7 @@ func _physics_process(delta: float):
 	else:
 		movement.y = s * (float(Input.is_action_pressed("up")) - float(Input.is_action_pressed("down")))
 	velocity = quaternion * movement
-	look_at(global_position + (quaternion * Vector3.RIGHT).cross(get_gravity()), -get_gravity().normalized())
+	look_at(global_position + (quaternion * Vector3.RIGHT).cross(get_gravity()).normalized(), -get_gravity().normalized())
 	move_and_slide()
 	
 	viewpoint_changed.emit(position)

@@ -1,15 +1,13 @@
-[gd_scene load_steps=3 format=3 uid="uid://n5c3ff6puuq7"]
+[gd_scene load_steps=2 format=3 uid="uid://n5c3ff6puuq7"]
 
 [ext_resource type="Script" path="res://code/face.gd" id="1_ldjxy"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6t8h1"]
-vertex_color_use_as_albedo = true
 
 [node name="Face" type="Node3D"]
 script = ExtResource("1_ldjxy")
 
 [node name="Mesh" type="MeshInstance3D" parent="."]
-material_override = SubResource("StandardMaterial3D_6t8h1")
+extra_cull_margin = 11.0
+ignore_occlusion_culling = true
 
 [node name="SubFaces" type="Node3D" parent="."]
 visible = false

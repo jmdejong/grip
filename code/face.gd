@@ -24,15 +24,23 @@ static func from_points(a: Point, b: Point, c: Point) -> Face:
 	
 	return face
 
-func _enter_tree() -> void:
+func _ready() -> void:
+	shape = p0.shape
 	center = global_transform * ((p0.pos + p1.pos + p2.pos)/3.0)
 	near = (global_transform * p0.pos).distance_to(center) * 2.0
 	far = near * 2
-	shape = p0.shape
 	depth = max(p0.depth, p1.depth, p2.depth)
 	if $Mesh.mesh == null:
 		$Mesh.mesh = build_mesh()
+	#$Mesh.custom_aabb = AABB(p0.position(), Vector3.ZERO)\
+		#.expand(p1.position())\
+		#.expand(p2.position())\
+		#.expand(p0.pos)\
+		#.expand(p1.pos)\
+		#.expand(p2.pos)
 	resolution = p1.pos.distance_to(p2.pos) / segments
+	$Mesh.material_override = shape.material
+
 
 func sub_points() -> Dictionary:
 	var subpoints: Dictionary = {}
@@ -60,6 +68,7 @@ func build_mesh():
 	surface[Mesh.ARRAY_NORMAL] = PackedVector3Array()
 	surface[Mesh.ARRAY_COLOR] = PackedColorArray()
 	surface[Mesh.ARRAY_INDEX] = PackedInt32Array()
+	surface[Mesh.ARRAY_CUSTOM0] = PackedFloat32Array()
 	var subpoints := sub_points()
 	var i: int = 0
 	for iv: int in range(segments+1):
@@ -70,6 +79,7 @@ func build_mesh():
 			surface[Mesh.ARRAY_VERTEX].append(point.position())
 			surface[Mesh.ARRAY_NORMAL].append(point.normal())
 			surface[Mesh.ARRAY_COLOR].append(point.color())
+			surface[Mesh.ARRAY_CUSTOM0].append(point.height)
 			if iv > 0:
 				var p: int = i + iv - segments - 2
 				surface[Mesh.ARRAY_INDEX].append_array(PackedInt32Array([p, p+1, i]))
@@ -77,7 +87,13 @@ func build_mesh():
 					surface[Mesh.ARRAY_INDEX].append_array([p, i, i-1])
 			i += 1
 	var mesh := ArrayMesh.new()
-	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, surface)
+	mesh.add_surface_from_arrays(
+		Mesh.PRIMITIVE_TRIANGLES,
+		surface,
+		[],
+		{},
+		Mesh.ARRAY_CUSTOM_R_FLOAT << Mesh.ARRAY_FORMAT_CUSTOM0_SHIFT
+	)
 	return mesh
 
 func make_subfaces() -> Array[Face]:
@@ -98,20 +114,26 @@ func remove_subfaces() -> void:
 		face.queue_free()
 	subfaces = null
 
+func add_subfaces(subfaces: Array[Face]) -> void:
+	for subface in subfaces:
+		$SubFaces.add_child(subface)
 
 func _process(_delta: float) -> void:
+	#if $Mesh.mesh == null:
+		#$Mesh.mesh = build_mesh()
 	if resolution < shape.min_resolution:
 		return
 	var cd: float = get_viewport().get_camera_3d().global_position.distance_to(center)
-	$Mesh.visible = cd > near
-	$SubFaces.visible = cd <= near
+	var show_sub = cd <= near
+	$Mesh.visible = !show_sub
+	$SubFaces.visible = show_sub
 	if subfaces == null && cd <= near:
 		subfaces = make_subfaces()
-		for face in subfaces:
-			$SubFaces.add_child(face)
+		add_subfaces(subfaces)
+		#for face in subfaces:
+			#$SubFaces.add_child(face)
 	if subfaces != null && cd > far:
 		remove_subfaces()
-
 
 static func randomizef(seed: int) -> float:
 	var rng := RandomNumberGenerator.new()
