@@ -7,11 +7,12 @@ var center: Vector3
 const FaceScene = preload("res://scenes/face.tscn")
 @export var gradient: Gradient
 var core: Vector3 = Vector3(0, 0, 0)
-@export var gradient_scale = 500
+@export var gradient_scale = 2000
 @export var height_base: float = 100
 @export var random_weight: float = 1000
 @export var material: Material
-var min_resolution: float = 1.0
+@export var height_multiplier: float = 1
+@export var min_resolution: float = 0.8
 
 func _enter_tree() -> void:
 	material.set_shader_parameter("gradient_scale", gradient_scale)

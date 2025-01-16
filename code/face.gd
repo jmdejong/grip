@@ -76,8 +76,21 @@ func build_mesh():
 			var iw: int = segments-iu-iv
 			var point: Point = subpoints[Vector3i(iu, iv, iw)]
 			var pos: Vector3 = point.pos
+			var normal: Vector3
+			if iw > iv && iw > iu:
+				normal = point.position().direction_to(subpoints[Vector3i(iu, iv+1, iw-1)].position()) \
+					.cross(point.position().direction_to(subpoints[Vector3i(iu+1, iv, iw-1)].position())) \
+					.normalized()
+			elif iu > iv:
+				normal = point.position().direction_to(subpoints[Vector3i(iu-1, iv, iw+1)].position()) \
+					.cross(point.position().direction_to(subpoints[Vector3i(iu-1, iv+1, iw)].position())) \
+					.normalized()
+			else:
+				normal = point.position().direction_to(subpoints[Vector3i(iu+1, iv-1, iw)].position()) \
+					.cross(point.position().direction_to(subpoints[Vector3i(iu, iv-1, iw+1)].position())) \
+					.normalized()
 			surface[Mesh.ARRAY_VERTEX].append(point.position())
-			surface[Mesh.ARRAY_NORMAL].append(point.normal())
+			surface[Mesh.ARRAY_NORMAL].append(normal)
 			surface[Mesh.ARRAY_COLOR].append(point.color())
 			surface[Mesh.ARRAY_CUSTOM0].append(point.height)
 			if iv > 0:
@@ -158,7 +171,7 @@ class Point:
 		self.depth = depth
 	
 	func position() -> Vector3:
-		return shape.surface_point(pos, max(height, -0.000001))
+		return shape.surface_point(pos, max(height * shape.height_multiplier, -0.000001))
 	
 	func normal() -> Vector3:
 		return shape.core.direction_to(pos)

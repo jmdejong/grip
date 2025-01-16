@@ -7,15 +7,16 @@
 [ext_resource type="ArrayMesh" uid="uid://cxur7kdo4i170" path="res://models/icosahedron2.obj" id="3_t4xrs"]
 [ext_resource type="PackedScene" uid="uid://bfk6sqf5ub7r" path="res://scenes/marker.tscn" id="6_2isk2"]
 
-[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_x0wym"]
-sky_horizon_color = Color(0.266667, 0.266667, 0.333333, 1)
-ground_bottom_color = Color(0, 0, 0, 1)
-ground_horizon_color = Color(0.266667, 0.266667, 0.333333, 1)
-sun_angle_max = 20.0
-sun_curve = 0.310578
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_uvsn1"]
+sky_top_color = Color(0, 0, 0.133333, 1)
+sky_horizon_color = Color(0, 0, 0.133333, 1)
+ground_bottom_color = Color(0, 0, 0.133333, 1)
+ground_horizon_color = Color(0, 0, 0.133333, 1)
+sun_angle_max = 90.0
+sun_curve = 0.1
 
 [sub_resource type="Sky" id="Sky_joldn"]
-sky_material = SubResource("ProceduralSkyMaterial_x0wym")
+sky_material = SubResource("ProceduralSkyMaterial_uvsn1")
 
 [sub_resource type="Environment" id="Environment_oak1v"]
 background_mode = 2
