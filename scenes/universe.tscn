@@ -1,10 +1,9 @@
-[gd_scene load_steps=19 format=3 uid="uid://fhwj7ver7dnj"]
+[gd_scene load_steps=18 format=3 uid="uid://fhwj7ver7dnj"]
 
 [ext_resource type="Script" path="res://code/universe.gd" id="1_fiys1"]
 [ext_resource type="Script" path="res://code/render.gd" id="1_pfgh2"]
 [ext_resource type="PackedScene" uid="uid://c2qiutu84rnwi" path="res://scenes/player.tscn" id="1_u61e3"]
 [ext_resource type="PackedScene" uid="uid://dpdqr75yvrw7" path="res://scenes/planet.tscn" id="2_l5nsi"]
-[ext_resource type="ArrayMesh" uid="uid://cxur7kdo4i170" path="res://models/icosahedron2.obj" id="3_t4xrs"]
 [ext_resource type="PackedScene" uid="uid://bfk6sqf5ub7r" path="res://scenes/marker.tscn" id="6_2isk2"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_uvsn1"]
@@ -95,10 +94,6 @@ visibility_parent = NodePath("..")
 material_override = SubResource("StandardMaterial3D_e36cl")
 mesh = SubResource("BoxMesh_2ll2l")
 skeleton = NodePath("../../../..")
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Start"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -5)
-mesh = ExtResource("3_t4xrs")
 
 [node name="Planet" parent="." instance=ExtResource("2_l5nsi")]
 radius = 50000.0
