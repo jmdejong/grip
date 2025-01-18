@@ -1,9 +1,10 @@
-[gd_scene load_steps=17 format=3 uid="uid://fhwj7ver7dnj"]
+[gd_scene load_steps=18 format=3 uid="uid://fhwj7ver7dnj"]
 
 [ext_resource type="Script" path="res://code/universe.gd" id="1_fiys1"]
 [ext_resource type="Script" path="res://code/render.gd" id="1_pfgh2"]
 [ext_resource type="PackedScene" uid="uid://c2qiutu84rnwi" path="res://scenes/player.tscn" id="1_u61e3"]
 [ext_resource type="PackedScene" uid="uid://dpdqr75yvrw7" path="res://scenes/planet.tscn" id="2_l5nsi"]
+[ext_resource type="Script" path="res://code/counters.gd" id="3_oewbs"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_uvsn1"]
 sky_top_color = Color(0, 0, 0.133333, 1)
@@ -60,7 +61,29 @@ environment = SubResource("Environment_oak1v")
 camera_attributes = SubResource("CameraAttributesPractical_tg0on")
 script = ExtResource("1_pfgh2")
 
+[node name="Counters" type="VBoxContainer" parent="."]
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("3_oewbs")
+
+[node name="Fps" type="Label" parent="Counters"]
+layout_mode = 2
+
+[node name="GlobalPos" type="Label" parent="Counters"]
+layout_mode = 2
+
+[node name="Pos" type="Label" parent="Counters"]
+layout_mode = 2
+
+[node name="Origin" type="Label" parent="Counters"]
+layout_mode = 2
+
+[node name="Player" parent="." instance=ExtResource("1_u61e3")]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 101001, 0)
+
 [node name="Origin" type="Node3D" parent="."]
+unique_name_in_owner = true
 
 [node name="Start" type="Node3D" parent="Origin"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 101000, 0)
@@ -98,7 +121,3 @@ shadow_enabled = true
 
 [node name="Planet" parent="Origin" instance=ExtResource("2_l5nsi")]
 radius = 100000.0
-
-[node name="Player" parent="." instance=ExtResource("1_u61e3")]
-unique_name_in_owner = true
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 101001, 0)

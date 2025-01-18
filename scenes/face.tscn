@@ -11,4 +11,3 @@ ignore_occlusion_culling = true
 
 [node name="SubFaces" type="Node3D" parent="."]
 visible = false
-visibility_parent = NodePath("../Mesh")

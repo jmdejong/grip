@@ -9,9 +9,12 @@ var shape: Planet
 var subfaces = null
 var depth: int
 var resolution: float
-var levels: int = 5
+var levels: int = 4
 var segments: int = 2**levels
 const FaceScene = preload("res://scenes/face.tscn")
+
+var computed_mesh = null
+var build_task_id: int = 0
 
 static func from_points(a: Point, b: Point, c: Point) -> Face:
 	var face: Face = FaceScene.instantiate()
@@ -25,16 +28,12 @@ func _ready() -> void:
 	shape = p0.shape
 	depth = max(p0.depth, p1.depth, p2.depth)
 	if $Mesh.mesh == null:
-		$Mesh.mesh = build_mesh()
-	#$Mesh.custom_aabb = AABB(p0.position(), Vector3.ZERO)\
-		#.expand(p1.position())\
-		#.expand(p2.position())\
-		#.expand(p0.pos)\
-		#.expand(p1.pos)\
-		#.expand(p2.pos)
+		build_task_id = TaskQueue.queue_task(depth, func(): computed_mesh = build_mesh())
 	resolution = p1.pos.distance_to(p2.pos) / segments
 	$Mesh.material_override = shape.material
 
+func _exit_tree() -> void:
+	TaskQueue.cancel_task(build_task_id)
 
 func sub_points() -> Dictionary:
 	var subpoints: Dictionary = {}
@@ -125,21 +124,27 @@ func add_subfaces() -> void:
 		$SubFaces.add_child(subface)
 
 func _process(_delta: float) -> void:
-	if resolution < shape.min_resolution:
-		return
-	
-	var center = global_transform * ((p0.pos + p1.pos + p2.pos)/3.0)
-	var near = (global_transform * p0.pos).distance_to(center) * 2.0
+	if $Mesh.mesh == null && computed_mesh != null:
+		$Mesh.mesh = computed_mesh
+	var center = global_transform * ((p0.position() + p1.position() + p2.position())/3.0)
+	var near = (global_transform * p0.position()).distance_to(center) * 3.0
 	var far = near * 2
 	var cd: float = get_viewport().get_camera_3d().global_position.distance_to(center)
-	var show_sub = cd <= near
-	$Mesh.visible = !show_sub
-	$SubFaces.visible = show_sub
-	if subfaces == null && cd <= near:
-		subfaces = make_subfaces()
-		add_subfaces()
+	if cd <= near && !$SubFaces.visible && resolution >= shape.min_resolution:
+		if subfaces == null && cd <= near:
+			subfaces = make_subfaces()
+			add_subfaces()
+		if subfaces.all(func(subface): return subface.is_initialized()):
+			$Mesh.visible = false
+			$SubFaces.visible = true
+	if cd > near:
+		$Mesh.visible = true
+		$SubFaces.visible = false
 	if subfaces != null && cd > far:
 		remove_subfaces()
+
+func is_initialized() -> bool:
+	return $Mesh.mesh != null
 
 @warning_ignore("shadowed_global_identifier")
 static func randomizef(seed: int) -> float:

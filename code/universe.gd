@@ -16,8 +16,7 @@ var just_updated: bool = false
 const reposition_distance: int = 2048 ** 2
 const reposition_snap: int = 2**8
 
-func _physics_process(delta: float) -> void:
-	#$Player.move()
+func _physics_process(_delta: float) -> void:
 	if $Player.position.length_squared() > reposition_distance:
 		reposition()
 		$Player.adjust_direction()

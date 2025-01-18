@@ -11,7 +11,7 @@ var core: Vector3 = Vector3(0, 0, 0)
 @export var height_base: float = 100
 @export var random_weight: float = 1000
 @export var material: Material
-@export var height_multiplier: float = 1
+@export var height_multiplier: float = 2
 @export var min_resolution: float = 0.8
 
 func _enter_tree() -> void:
@@ -73,7 +73,6 @@ func color(height: float) -> Color:
 		return Color.BLUE
 	else:
 		return gradient.sample(height / gradient_scale)
-
 
 
 const PHI: float = 1.61803398875
