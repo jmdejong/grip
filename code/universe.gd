@@ -11,33 +11,24 @@ func _input(_event: InputEvent) -> void:
 		add_child(marker)
 		marker.global_position = %Player.global_position
 
-func reposition() -> void:
-	var snap: int = 2**8
-	var d = ($Player.position / snap).round() * snap
-	$Player.position -= d
-	$Origin.position -= d
-	#print($Player.position, " ", $Origin.position)
-	#$Player.move()
-	#var new_origin: Vector3 = $Player.position.round()
-	#$Player.position -= new_origin - $Origin.position
-	#$Origin.position = new_origin
 	
-var just_updated = false
+var just_updated: bool = false
+const reposition_distance: int = 2048 ** 2
+const reposition_snap: int = 2**8
+
 func _physics_process(delta: float) -> void:
 	#$Player.move()
-	if $Player.position.length_squared() > 1024 ** 2:
-		print("a ", $Player.position - $Origin.position, $Player.rotation, $Player.get_gravity())
+	if $Player.position.length_squared() > reposition_distance:
 		reposition()
-		print("b ", $Player.position - $Origin.position, $Player.rotation, $Player.get_gravity())
-		#$Player.adjust_direction()
-		print("c ", $Player.position - $Origin.position, $Player.rotation, $Player.get_gravity())
+		$Player.adjust_direction()
 		just_updated = true
 	else:
-		if just_updated:
-			print("d ", $Player.position - $Origin.position, $Player.rotation, $Player.get_gravity())
-		else:
+		if not just_updated:
 			$Player.adjust_direction()
-		if just_updated:
-			print("e ", $Player.position - $Origin.position, $Player.rotation, $Player.get_gravity())
-			print("")
-			just_updated = false
+		just_updated = false
+
+
+func reposition() -> void:
+	var d = ($Player.position / reposition_snap).round() * reposition_snap
+	$Player.position -= d
+	$Origin.position -= d
