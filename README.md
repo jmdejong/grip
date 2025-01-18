@@ -5,7 +5,11 @@
 
 Procedural generation experiment to create planets that generate generating higher level of detail on the fly as distance to area decreases.
 
-The goal of this experiment is to create a planet that looks good and loads fast when looking at the whole planet, but also allows you to walk through the world.
+Goals of this experiment:
+- Planet looks good from afar
+- Planet looks good from the surface; you can walk around it in first person and see an interesting world around you
+- At all distances the performance is good and memory usage is low
+- The world is connected and features at one location affect features at another location (for example: rivers that flow from mountains to the sea, and erosion)
 
 ## Controls
 - Mouse: look around
