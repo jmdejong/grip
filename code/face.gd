@@ -75,7 +75,6 @@ func build_mesh():
 		for iu: int in range(segments - iv + 1):
 			var iw: int = segments-iu-iv
 			var point: Point = subpoints[Vector3i(iu, iv, iw)]
-			var pos: Vector3 = point.pos
 			var normal: Vector3
 			if iw > iv && iw > iu:
 				normal = point.position().direction_to(subpoints[Vector3i(iu, iv+1, iw-1)].position()) \
@@ -127,7 +126,7 @@ func remove_subfaces() -> void:
 		face.queue_free()
 	subfaces = null
 
-func add_subfaces(subfaces: Array[Face]) -> void:
+func add_subfaces() -> void:
 	for subface in subfaces:
 		$SubFaces.add_child(subface)
 
@@ -142,12 +141,13 @@ func _process(_delta: float) -> void:
 	$SubFaces.visible = show_sub
 	if subfaces == null && cd <= near:
 		subfaces = make_subfaces()
-		add_subfaces(subfaces)
+		add_subfaces()
 		#for face in subfaces:
 			#$SubFaces.add_child(face)
 	if subfaces != null && cd > far:
 		remove_subfaces()
 
+@warning_ignore("shadowed_global_identifier")
 static func randomizef(seed: int) -> float:
 	var rng := RandomNumberGenerator.new()
 	rng.set_seed(seed)
@@ -159,15 +159,16 @@ class Point:
 	var shape: Planet
 	var pos: Vector3
 	var height: float
-	var seed: int
+	var rand_seed: int
 	var depth: int
 	var actual: bool = true
-	func _init(shape: Planet, pos: Vector3, height: float, seed: int, depth: int) -> void:
+	@warning_ignore("shadowed_variable")
+	func _init(shape: Planet, pos: Vector3, height: float, rand_seed: int, depth: int) -> void:
 		self.shape = shape
 		self.pos = pos
 		assert(is_equal_approx((pos - shape.core).length_squared(), shape.radius * shape.radius))
 		self.height = height
-		self.seed = seed
+		self.rand_seed = rand_seed
 		self.depth = depth
 	
 	func position() -> Vector3:
@@ -179,18 +180,19 @@ class Point:
 	func color() -> Color:
 		return shape.color(height)
 	
+	@warning_ignore("shadowed_variable")
 	static func mid(a: Point, b: Point) -> Point:
 		assert(a.shape == b.shape)
 		var shape: Planet = a.shape
 		assert(a.pos != b.pos)
 		assert(a.depth >= 0 && b.depth >= 0)
-		var seed: int = rand_from_seed(a.seed + b.seed)[0]
+		var rand_seed: int = rand_from_seed(a.rand_seed + b.rand_seed)[0]
 		var depth: int = max(a.depth, b.depth) + 1
 		return Point.new(
 			shape,
 			shape.surface_point(a.pos*.5 + b.pos*.5),
-			(a.height + b.height) / 2 + (Face.randomizef(seed) * 2 - 1) / 1.7**depth * shape.random_weight,
-			seed,
+			(a.height + b.height) / 2 + (Face.randomizef(rand_seed) * 2 - 1) / 1.7**depth * shape.random_weight,
+			rand_seed,
 			depth
 		)
 	

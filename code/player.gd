@@ -13,7 +13,7 @@ var gravity_enabled: bool = false
 
 signal viewpoint_changed(pos: Vector3)
 
-func _physics_process(delta: float):
+func _physics_process(_delta: float):
 	var input_movement: Vector2 = Input.get_vector("left", "right", "forwards", "backwards")
 	var s: float = speed
 	if Input.is_action_pressed("sprint"):
@@ -29,12 +29,15 @@ func _physics_process(delta: float):
 	else:
 		movement.y = s * (float(Input.is_action_pressed("up")) - float(Input.is_action_pressed("down")))
 	velocity = quaternion * movement
-	look_at(global_position + (quaternion * Vector3.RIGHT).cross(get_gravity()).normalized(), -get_gravity().normalized())
+	var down = get_gravity()
+	if down.length_squared() == 0:
+		down = Vector3(0, -1, 0)
+	look_at(global_position + (quaternion * Vector3.RIGHT).cross(down).normalized(), -down.normalized())
 	move_and_slide()
 	
 	viewpoint_changed.emit(position)
 
-func _input(event):
+func _input(event: InputEvent):
 	if Input.is_action_just_pressed("toggle_gravity"):
 		gravity_enabled = !gravity_enabled
 	
