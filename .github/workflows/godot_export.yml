@@ -1,0 +1,55 @@
+on:
+  push:
+    branches:
+      - main
+      - master
+      - trunk
+
+jobs:
+  export_game:
+    # Always use ubuntu-latest for this action
+    runs-on: ubuntu-latest
+    # Add permission for release creation. Can be made narrower according to your needs
+    permissions: write-all
+    name: Export Game
+    steps:
+
+    - name: checkout
+      uses: actions/checkout@v4.1.4
+
+
+    - name: calculate version
+      run: echo "v0.1.${{ github.run_number }}" > version.txt
+
+    - name: get tag from version
+      id: tag_version
+      run: echo "TAG_VERSION=$(cat version.txt)" >> $GITHUB_OUTPUT
+
+    - name: export game
+      id: export
+      uses: firebelley/godot-export@v5.2.1
+      with:
+        # Defining all the required inputs
+        godot_executable_download_url: https://github.com/godotengine/godot-builds/releases/download/4.3-stable/Godot_v4.3-stable_linux.x86_64.zip
+        godot_export_templates_download_url: https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_export_templates.tpz
+        cache: true
+        relative_project_path: ./
+        archive_output: true
+
+    - name: set index
+      run: cp ${{ steps.export.outputs.build_directory }}/Web/*.html ${{ steps.export.outputs.build_directory }}/Web/index.html
+
+    - name: publish page
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ${{ steps.export.outputs.build_directory }}/Web
+
+    - name: create release
+      uses: ncipollo/release-action@v1.14.0
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        generateReleaseNotes: true
+        tag: ${{ steps.tag_version.outputs.TAG_VERSION }}
+        commit: ${{ github.ref }}
+        artifacts: ${{ steps.export.outputs.archive_directory }}/*
