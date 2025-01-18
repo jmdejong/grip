@@ -5,9 +5,6 @@ var p0: Point
 var p1: Point
 var p2: Point
 
-var center: Vector3
-var near: float
-var far: float
 var shape: Planet
 var subfaces = null
 var depth: int
@@ -26,9 +23,6 @@ static func from_points(a: Point, b: Point, c: Point) -> Face:
 
 func _ready() -> void:
 	shape = p0.shape
-	center = global_transform * ((p0.pos + p1.pos + p2.pos)/3.0)
-	near = (global_transform * p0.pos).distance_to(center) * 2.0
-	far = near * 2
 	depth = max(p0.depth, p1.depth, p2.depth)
 	if $Mesh.mesh == null:
 		$Mesh.mesh = build_mesh()
@@ -131,10 +125,12 @@ func add_subfaces() -> void:
 		$SubFaces.add_child(subface)
 
 func _process(_delta: float) -> void:
-	#if $Mesh.mesh == null:
-		#$Mesh.mesh = build_mesh()
 	if resolution < shape.min_resolution:
 		return
+	
+	var center = global_transform * ((p0.pos + p1.pos + p2.pos)/3.0)
+	var near = (global_transform * p0.pos).distance_to(center) * 2.0
+	var far = near * 2
 	var cd: float = get_viewport().get_camera_3d().global_position.distance_to(center)
 	var show_sub = cd <= near
 	$Mesh.visible = !show_sub
@@ -142,8 +138,6 @@ func _process(_delta: float) -> void:
 	if subfaces == null && cd <= near:
 		subfaces = make_subfaces()
 		add_subfaces()
-		#for face in subfaces:
-			#$SubFaces.add_child(face)
 	if subfaces != null && cd > far:
 		remove_subfaces()
 

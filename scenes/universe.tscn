@@ -1,10 +1,9 @@
-[gd_scene load_steps=18 format=3 uid="uid://fhwj7ver7dnj"]
+[gd_scene load_steps=17 format=3 uid="uid://fhwj7ver7dnj"]
 
 [ext_resource type="Script" path="res://code/universe.gd" id="1_fiys1"]
 [ext_resource type="Script" path="res://code/render.gd" id="1_pfgh2"]
 [ext_resource type="PackedScene" uid="uid://c2qiutu84rnwi" path="res://scenes/player.tscn" id="1_u61e3"]
 [ext_resource type="PackedScene" uid="uid://dpdqr75yvrw7" path="res://scenes/planet.tscn" id="2_l5nsi"]
-[ext_resource type="PackedScene" uid="uid://bfk6sqf5ub7r" path="res://scenes/marker.tscn" id="6_2isk2"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_uvsn1"]
 sky_top_color = Color(0, 0, 0.133333, 1)
@@ -61,45 +60,45 @@ environment = SubResource("Environment_oak1v")
 camera_attributes = SubResource("CameraAttributesPractical_tg0on")
 script = ExtResource("1_pfgh2")
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(0.872952, 0.45562, -0.174258, 0.00203175, 0.353828, 0.935308, 0.487802, -0.816833, 0.307949, 0.0479867, 7.51929, 0)
-shadow_enabled = true
+[node name="Origin" type="Node3D" parent="."]
 
-[node name="Start" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 51000, 0)
+[node name="Start" type="Node3D" parent="Origin"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 101000, 0)
 
-[node name="Floor" type="MeshInstance3D" parent="Start"]
+[node name="Floor" type="MeshInstance3D" parent="Origin/Start"]
 material_override = SubResource("StandardMaterial3D_fpogw")
 mesh = SubResource("BoxMesh_s7i5b")
-skeleton = NodePath("../..")
+skeleton = NodePath("../../..")
 
-[node name="Ball" type="MeshInstance3D" parent="Start"]
+[node name="Ball" type="MeshInstance3D" parent="Origin/Start"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 1.5, -7)
 material_override = SubResource("StandardMaterial3D_epyjo")
 mesh = SubResource("SphereMesh_0gjqh")
-skeleton = NodePath("../..")
+skeleton = NodePath("../../..")
 
-[node name="Node3D" type="Node3D" parent="Start"]
+[node name="Node3D" type="Node3D" parent="Origin/Start"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 1.5, -7)
 
-[node name="BoxFar" type="MeshInstance3D" parent="Start/Node3D"]
+[node name="BoxFar" type="MeshInstance3D" parent="Origin/Start/Node3D"]
 material_override = SubResource("StandardMaterial3D_ufvwp")
 visibility_range_begin = 10.0
 visibility_range_begin_margin = 2.0
 mesh = SubResource("BoxMesh_fwt8w")
 
-[node name="BoxNear" type="MeshInstance3D" parent="Start/Node3D/BoxFar"]
+[node name="BoxNear" type="MeshInstance3D" parent="Origin/Start/Node3D/BoxFar"]
 transform = Transform3D(0.853553, -0.146447, 0.5, 0.5, 0.5, -0.707107, -0.146447, 0.853553, 0.5, 0, 0, 0)
 visibility_parent = NodePath("..")
 material_override = SubResource("StandardMaterial3D_e36cl")
 mesh = SubResource("BoxMesh_2ll2l")
-skeleton = NodePath("../../../..")
+skeleton = NodePath("../../../../..")
 
-[node name="Planet" parent="." instance=ExtResource("2_l5nsi")]
-radius = 50000.0
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="Origin"]
+transform = Transform3D(0.872952, 0.45562, -0.174258, 0.00203175, 0.353828, 0.935308, 0.487802, -0.816833, 0.307949, 0.0479867, 7.51929, 0)
+shadow_enabled = true
 
-[node name="Marker" parent="." instance=ExtResource("6_2isk2")]
+[node name="Planet" parent="Origin" instance=ExtResource("2_l5nsi")]
+radius = 100000.0
 
 [node name="Player" parent="." instance=ExtResource("1_u61e3")]
 unique_name_in_owner = true
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 51000.9, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 101001, 0)
