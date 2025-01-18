@@ -6,8 +6,7 @@
 script = ExtResource("1_ldjxy")
 
 [node name="Mesh" type="MeshInstance3D" parent="."]
-extra_cull_margin = 11.0
-ignore_occlusion_culling = true
+visible = false
 
 [node name="SubFaces" type="Node3D" parent="."]
 visible = false

@@ -4,7 +4,7 @@ extends CharacterBody3D
 const MOUSE_SENSITIVITY: float = 0.003
 const speed: float = 5
 const sprint_speed: float = 500
-const ultra_sprint_speed: float = 20000
+const ultra_sprint_speed: float = 50000
 const jump_speed: float = 10
 
 var gravity_enabled: bool = false

@@ -8,7 +8,7 @@ func _ready() -> void:
 func _input(_event: InputEvent) -> void:
 	if Input.is_action_just_pressed("mark_position"):
 		var marker = marker_scene.instantiate()
-		add_child(marker)
+		%Origin.add_child(marker)
 		marker.global_position = %Player.global_position
 
 	

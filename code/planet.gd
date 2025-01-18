@@ -21,8 +21,8 @@ func _enter_tree() -> void:
 
 func _ready() -> void:
 	generate_icosahedron()
-	$GravityField.scale = Vector3(1, 1, 1) * radius * 4
-	$Mesh.visibility_range_begin = radius * 4
+	$GravityField.scale = Vector3(1, 1, 1) * radius * 10
+	$Mesh.visibility_range_begin = radius * 10
 	center = global_position
 
 func _process(_delta) -> void:

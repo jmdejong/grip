@@ -9,12 +9,13 @@ var shape: Planet
 var subfaces = null
 var depth: int
 var resolution: float
-var levels: int = 4
+var levels: int = 5
 var segments: int = 2**levels
+var near_factor: float = 3
 const FaceScene = preload("res://scenes/face.tscn")
 
 var computed_mesh = null
-var build_task_id: int = 0
+var build_task_id: int = -1
 
 static func from_points(a: Point, b: Point, c: Point) -> Face:
 	var face: Face = FaceScene.instantiate()
@@ -33,7 +34,8 @@ func _ready() -> void:
 	$Mesh.material_override = shape.material
 
 func _exit_tree() -> void:
-	TaskQueue.cancel_task(build_task_id)
+	if build_task_id > 0:
+		TaskQueue.cancel_task(build_task_id)
 
 func sub_points() -> Dictionary:
 	var subpoints: Dictionary = {}
@@ -126,12 +128,13 @@ func add_subfaces() -> void:
 func _process(_delta: float) -> void:
 	if $Mesh.mesh == null && computed_mesh != null:
 		$Mesh.mesh = computed_mesh
+		$Mesh.visible = true
+		$SubFaces.visible = false
 	var center = global_transform * ((p0.position() + p1.position() + p2.position())/3.0)
-	var near = (global_transform * p0.position()).distance_to(center) * 3.0
-	var far = near * 2
+	var near = (global_transform * p0.position()).distance_to(center) * near_factor
 	var cd: float = get_viewport().get_camera_3d().global_position.distance_to(center)
-	if cd <= near && !$SubFaces.visible && resolution >= shape.min_resolution:
-		if subfaces == null && cd <= near:
+	if cd <= near  && !$SubFaces.visible && resolution >= shape.min_resolution:
+		if subfaces == null:
 			subfaces = make_subfaces()
 			add_subfaces()
 		if subfaces.all(func(subface): return subface.is_initialized()):
@@ -140,7 +143,7 @@ func _process(_delta: float) -> void:
 	if cd > near:
 		$Mesh.visible = true
 		$SubFaces.visible = false
-	if subfaces != null && cd > far:
+	if subfaces != null && cd > near * 2:
 		remove_subfaces()
 
 func is_initialized() -> bool:
