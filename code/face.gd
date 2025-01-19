@@ -11,7 +11,7 @@ var depth: int
 var resolution: float
 var levels: int = 5
 var segments: int = 2**levels
-var near_factor: float = 3
+var near_factor: float = 2
 const FaceScene = preload("res://scenes/face.tscn")
 
 var computed_mesh = null
@@ -130,20 +130,23 @@ func _process(_delta: float) -> void:
 		$Mesh.mesh = computed_mesh
 		$Mesh.visible = true
 		$SubFaces.visible = false
-	var center = global_transform * ((p0.position() + p1.position() + p2.position())/3.0)
-	var near = (global_transform * p0.position()).distance_to(center) * near_factor
-	var cd: float = get_viewport().get_camera_3d().global_position.distance_to(center)
-	if cd <= near  && !$SubFaces.visible && resolution >= shape.min_resolution:
+	var g0: Vector3 = global_transform * p0.position()
+	var g1: Vector3 = global_transform * p1.position()
+	var g2: Vector3 = global_transform * p2.position()
+	var near2: float = g0.distance_squared_to(g1)
+	var cam: Vector3 = get_viewport().get_camera_3d().global_position
+	var cd2: float = min(cam.distance_squared_to(g0), cam.distance_squared_to(g1), cam.distance_squared_to(g2))
+	if cd2 <= near2  && !$SubFaces.visible && resolution >= shape.min_resolution:
 		if subfaces == null:
 			subfaces = make_subfaces()
 			add_subfaces()
 		if subfaces.all(func(subface): return subface.is_initialized()):
 			$Mesh.visible = false
 			$SubFaces.visible = true
-	if cd > near:
+	if cd2 > near2:
 		$Mesh.visible = true
 		$SubFaces.visible = false
-	if subfaces != null && cd > near * 2:
+	if subfaces != null && cd2 > near2 * 4:
 		remove_subfaces()
 
 func is_initialized() -> bool:

@@ -33,9 +33,6 @@ func move() -> void:
 	var movement: Vector3 = (Vector3(input_movement.x, 0, input_movement.y) * s)
 	if gravity_enabled:
 		pass
-		#movement.y = velocity.y - get_gravity().length()*delta
-		#if Input.is_action_pressed("up") and is_on_floor():
-			#movement.y = s
 	else:
 		movement.y = s * (float(Input.is_action_pressed("up")) - float(Input.is_action_pressed("down")))
 	velocity = quaternion * movement
