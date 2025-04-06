@@ -13,6 +13,17 @@ var levels: int = 5
 var segments: int = 2**levels
 var near_factor: float = 2
 const FaceScene = preload("res://scenes/face.tscn")
+const rainfall = 0.01
+
+
+var w01v: float = 0
+var w02v: float = 0
+var w12v: float = 0
+
+var w01p: float = 0
+var w02p: float = 0
+var w12p: float = 0
+
 
 var computed_mesh = null
 var build_task_id: int = -1
@@ -103,16 +114,22 @@ func build_mesh():
 	)
 	return mesh
 
+func water_balance() -> float:
+	return w01v + w01v + w12v + surface() * rainfall
+
+func surface() -> float:
+	return (p1.pos - p0.pos).cross(p2.pos - p0.pos).length() / 2.0
+
 func make_subfaces() -> Array[Face]:
 	var m01 := Point.mid(p0, p1)
 	var m02 := Point.mid(p0, p2)
 	var m12 := Point.mid(p1, p2)
-	return [
-		Face.from_points(p0, m01, m02),
-		Face.from_points(m01, p1, m12),
-		Face.from_points(m02, m12, p2),
-		Face.from_points(m01, m12, m02)
-	]
+	
+	var f0 := Face.from_points(p0, m01, m02)
+	var f1 := Face.from_points(m01, p1, m12)
+	var f2 := Face.from_points(m02, m12, p2)
+	var fm := Face.from_points(m01, m12, m02)
+	return [f0, f1, f2, fm]
 
 func remove_subfaces() -> void:
 	for face in subfaces:
