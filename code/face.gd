@@ -94,7 +94,11 @@ func build_mesh():
 				normal = point.position().direction_to(subpoints[Vector3i(iu+1, iv-1, iw)].position()) \
 					.cross(point.position().direction_to(subpoints[Vector3i(iu, iv-1, iw+1)].position())) \
 					.normalized()
-			surface[Mesh.ARRAY_VERTEX].append(point.position())
+			var forigin: Vector3 = (p0.pos + p1.pos + p2.pos) / 3.0
+			var origin: Vector3 = (forigin / 16).round() * 16 
+			
+			$Mesh.position = origin
+			surface[Mesh.ARRAY_VERTEX].append(point.position() - origin)
 			surface[Mesh.ARRAY_NORMAL].append(normal)
 			surface[Mesh.ARRAY_COLOR].append(point.color())
 			surface[Mesh.ARRAY_CUSTOM0].append(point.height)
