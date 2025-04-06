@@ -1,10 +1,10 @@
 [gd_scene load_steps=18 format=3 uid="uid://fhwj7ver7dnj"]
 
-[ext_resource type="Script" path="res://code/universe.gd" id="1_fiys1"]
-[ext_resource type="Script" path="res://code/render.gd" id="1_pfgh2"]
+[ext_resource type="Script" uid="uid://bnpaxfsqb5ksr" path="res://code/universe.gd" id="1_fiys1"]
+[ext_resource type="Script" uid="uid://cc81n2fc7bm5q" path="res://code/render.gd" id="1_pfgh2"]
 [ext_resource type="PackedScene" uid="uid://c2qiutu84rnwi" path="res://scenes/player.tscn" id="1_u61e3"]
 [ext_resource type="PackedScene" uid="uid://dpdqr75yvrw7" path="res://scenes/planet.tscn" id="2_l5nsi"]
-[ext_resource type="Script" path="res://code/counters.gd" id="3_oewbs"]
+[ext_resource type="Script" uid="uid://b6a3ybkjwii5q" path="res://code/counters.gd" id="3_oewbs"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_uvsn1"]
 sky_top_color = Color(0, 0, 0.133333, 1)

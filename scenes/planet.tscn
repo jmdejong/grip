@@ -1,8 +1,8 @@
 [gd_scene load_steps=8 format=3 uid="uid://dpdqr75yvrw7"]
 
-[ext_resource type="Script" path="res://code/planet.gd" id="1_ap1x6"]
+[ext_resource type="Script" uid="uid://qm6srhh7y2t" path="res://code/planet.gd" id="1_ap1x6"]
 [ext_resource type="Gradient" uid="uid://dpwoi6kn3k1rl" path="res://resources/height_gradient.tres" id="2_rv38r"]
-[ext_resource type="Shader" path="res://shaders/face.gdshader" id="3_874j5"]
+[ext_resource type="Shader" uid="uid://c6iu43wkx1ke2" path="res://shaders/face.gdshader" id="3_874j5"]
 
 [sub_resource type="GradientTexture1D" id="GradientTexture1D_kchrj"]
 gradient = ExtResource("2_rv38r")
@@ -10,10 +10,10 @@ gradient = ExtResource("2_rv38r")
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_lcc87"]
 render_priority = 0
 shader = ExtResource("3_874j5")
+shader_parameter/gradient = SubResource("GradientTexture1D_kchrj")
 shader_parameter/water_color = Color(0, 0, 1, 1)
 shader_parameter/gradient_scale = 1.0
 shader_parameter/radius = 1.0
-shader_parameter/gradient = SubResource("GradientTexture1D_kchrj")
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_lheha"]
 
